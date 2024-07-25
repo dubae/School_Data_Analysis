@@ -89,7 +89,10 @@ def predict_accidents_by_place(data, region, day, start_hour, end_hour):
         else:
             predicted_counts_2024[place] = 0
 
-    return predicted_counts_2024
+    total_predicted_count = sum(predicted_counts_2024.values())
+    predicted_percentage_2024 = {place: (count / total_predicted_count) * 100 if total_predicted_count > 0 else 0 for place, count in predicted_counts_2024.items()}
+
+    return predicted_counts_2024, total_predicted_count, predicted_percentage_2024
 
 # PyQt GUI
 class MainWindow(QMainWindow):
@@ -137,7 +140,7 @@ class MainWindow(QMainWindow):
         end_hour = int(self.end_hour_input.text())
         
         counts, place_distribution, place_counts_total = get_accident_counts_and_place_distribution(self.data, region, day, start_hour, end_hour)
-        predicted_counts_2024 = predict_accidents_by_place(self.data, region, day, start_hour, end_hour)
+        predicted_counts_2024, total_predicted_count, predicted_percentage_2024 = predict_accidents_by_place(self.data, region, day, start_hour, end_hour)
         
         result_text = f"{region} 지역에서 {day}요일 {start_hour}시부터 {end_hour}시까지의 사고 수:\n"
         for year, count in counts.items():
@@ -152,7 +155,9 @@ class MainWindow(QMainWindow):
         
         result_text += f"\n2024년 {day}요일에 예측된 사고 수:\n"
         for place, count in predicted_counts_2024.items():
-            result_text += f"  {place}: {count:.2f}건\n"
+            percentage = predicted_percentage_2024[place]
+            result_text += f"  {place}: {count:.2f}건 ({percentage:.2f}%)\n"
+        result_text += f"\n총 예측 사고 수: {total_predicted_count:.2f}건\n"
         
         self.result_label.setText(result_text)
 

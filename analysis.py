@@ -159,6 +159,20 @@ class MainWindow(QMainWindow):
             result_text += f"  {place}: {count:.2f}건 ({percentage:.2f}%)\n"
         result_text += f"\n총 예측 사고 수: {total_predicted_count:.2f}건\n"
         
+        # 여기서부터는 두회의 테스트
+        result_text += f"\n--------------TEST--------------\n"
+        for i in range(start_hour,24,1):
+            predicted_counts_2024, total_predicted_count, predicted_percentage_2024 = predict_accidents_by_place(self.data, region, day, i, i+1)
+            result_text += f"\n2024년 {day}요일 {i}~{i+1}에 예측된 사고 수:\n"
+            for place, count in predicted_counts_2024.items():
+                percentage = predicted_percentage_2024[place]
+                result_text += f"  {place}: {count:.2f}건 ({percentage:.2f}%)\n"
+            result_text += f"\n총 예측 사고 수: {total_predicted_count:.2f}건\n"
+        
+        
+
+
+        
         self.result_label.setText(result_text)
 
 if __name__ == '__main__':

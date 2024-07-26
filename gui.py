@@ -1,12 +1,13 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QPushButton, QVBoxLayout, QWidget, QStackedWidget, QHBoxLayout
-from pages.AccidentLocationPage import AccidentLocationPage, load_and_preprocess_data  # AccidentLocationPage 클래스와 데이터 로드 함수 임포트
+from pages.AccidentLocationPage import AccidentLocationPage, load_and_preprocess_data
 from pages.AccidentPartPage import AccidentPartPage
 from pages.AccidentTypePage import AccidentTypePage
 from pages.AccidentActivityPage import AccidentActivityPage
 from pages.AccidentObjectPage import AccidentObjectPage
 from pages.AccidentGradePage import AccidentGradePage
-# 메인 윈도우
+from pages.AccidentGraphPage import AccidentGraphPage  # GraphPage 임포트
+
 class MainWindow(QMainWindow):
     def __init__(self, data):
         super().__init__()
@@ -38,7 +39,8 @@ class MainWindow(QMainWindow):
             "사고형태": AccidentTypePage(self.data),
             "사고당시활동": AccidentActivityPage(self.data),
             "사고매개물": AccidentObjectPage(self.data),
-            "사고학년": AccidentGradePage(self.data)
+            "사고학년": AccidentGradePage(self.data),
+            "사고그래프": AccidentGraphPage(self.data)  # 사고그래프 페이지 추가
         }
 
         # 버튼 및 페이지 추가

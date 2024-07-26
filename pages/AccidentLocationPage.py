@@ -1,5 +1,6 @@
 import pandas as pd
-from PyQt5.QtWidgets import QWidget, QLabel, QComboBox, QLineEdit, QPushButton, QVBoxLayout, QTextEdit, QTableWidget, QTableWidgetItem, QHeaderView
+from PyQt5.QtWidgets import QWidget, QLabel, QComboBox, QLineEdit, QPushButton, QVBoxLayout, QHBoxLayout, QTextEdit, QTableWidget, QTableWidgetItem, QHeaderView
+from PyQt5.QtGui import QBrush, QColor
 from sklearn.linear_model import LinearRegression
 import numpy as np
 
@@ -88,17 +89,23 @@ class AccidentLocationPage(QWidget):
     
     def init_ui(self):
         layout = QVBoxLayout()
-
-        # 지역 드롭다운
+        
+        # 지역 및 요일 선택
+        selection_layout = QHBoxLayout()
+        
         self.region_label = QLabel("지역:")
         self.region_combo = QComboBox()
         self.region_combo.addItems(["서울", "경기", "강원", "세종", "부산", "제주"])
-
-        # 요일 드롭다운
+        
         self.day_label = QLabel("요일:")
         self.day_combo = QComboBox()
         self.day_combo.addItems(["월", "화", "수", "목", "금", "토", "일"])
-
+        
+        selection_layout.addWidget(self.region_label)
+        selection_layout.addWidget(self.region_combo)
+        selection_layout.addWidget(self.day_label)
+        selection_layout.addWidget(self.day_combo)
+        
         # 시간 입력
         self.start_hour_label = QLabel("시작 시간 (0-23):")
         self.start_hour_input = QLineEdit()
@@ -110,10 +117,7 @@ class AccidentLocationPage(QWidget):
         self.result_table = QTableWidget()
         
         # 레이아웃에 위젯 추가
-        layout.addWidget(self.region_label)
-        layout.addWidget(self.region_combo)
-        layout.addWidget(self.day_label)
-        layout.addWidget(self.day_combo)
+        layout.addLayout(selection_layout)
         layout.addWidget(self.start_hour_label)
         layout.addWidget(self.start_hour_input)
         layout.addWidget(self.end_hour_label)
@@ -152,8 +156,12 @@ class AccidentLocationPage(QWidget):
             predicted_counts_2024, total_predicted_count, predicted_percentage_2024 = predict_accidents_by_place(self.data, region, day, hour, hour+1)
             for j, place in enumerate(places):
                 percentage = predicted_percentage_2024[place]
-                self.result_table.setItem(j, i, QTableWidgetItem(f"{percentage:.2f}%"))
+                item = QTableWidgetItem(f"{percentage:.2f}%")
+                if percentage > 30:
+                    item.setBackground(QBrush(QColor(255, 0, 0,128)))  # Red background for >30%
+                self.result_table.setItem(j, i, item)
 
         # 테이블 보기 설정
         self.result_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.result_table.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
+

@@ -10,6 +10,7 @@ def load_and_preprocess_data(file_path):
         # 데이터 전처리: 2019-2022년의 "교외활동"을 "교외"로 변경
         if year in ['2019', '2020', '2021', '2022']:
             df['사고장소'] = df['사고장소'].replace('교외활동', '교외')
+            df.rename(columns={'사고매개물': '매개물'}, inplace=True)
         all_data[year] = df
     
     return all_data

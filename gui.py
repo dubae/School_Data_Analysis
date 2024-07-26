@@ -34,11 +34,11 @@ class MainWindow(QMainWindow):
         # 페이지 설정
         self.pages = {
             "사고장소": AccidentLocationPage(self.data),
-            "사고부위": AccidentPartPage(),
-            "사고형태": AccidentTypePage(),
-            "사고당시활동": AccidentActivityPage(),
-            "사고매개물": AccidentObjectPage(),
-            "사고학년": AccidentGradePage()
+            "사고부위": AccidentPartPage(self.data),
+            "사고형태": AccidentTypePage(self.data),
+            "사고당시활동": AccidentActivityPage(self.data),
+            "사고매개물": AccidentObjectPage(self.data),
+            "사고학년": AccidentGradePage(self.data)
         }
 
         # 버튼 및 페이지 추가

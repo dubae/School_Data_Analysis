@@ -1,6 +1,7 @@
 import pandas as pd
 from PyQt5.QtWidgets import QWidget, QLabel, QComboBox, QLineEdit, QPushButton, QVBoxLayout, QHBoxLayout, QTextEdit, QTableWidget, QTableWidgetItem, QHeaderView
 from PyQt5.QtGui import QBrush, QColor
+from datetime import datetime
 from sklearn.linear_model import LinearRegression
 import numpy as np
 
@@ -71,6 +72,8 @@ def predict_accidents_by_place(data, region, day, start_hour, end_hour):
             y = np.array(counts)
             model = LinearRegression().fit(X, y)
             predicted_counts_2024[place] = model.predict(np.array([[2024]]))[0]
+            if predicted_counts_2024[place]<0:
+                predicted_counts_2024[place]=0
         else:
             predicted_counts_2024[place] = 0
 
@@ -107,10 +110,8 @@ class AccidentLocationPage(QWidget):
         selection_layout.addWidget(self.day_combo)
         
         # 시간 입력
-        self.start_hour_label = QLabel("시작 시간 (0-23):")
-        self.start_hour_input = QLineEdit()
-        self.end_hour_label = QLabel("종료 시간 (1-24):")
-        self.end_hour_input = QLineEdit()
+        # self.start_hour_label = QLabel("시작 시간 (0-23):")
+        # self.start_hour_input = QLineEdit()
 
         # 버튼 및 결과
         self.predict_button = QPushButton("사고 수 확인")
@@ -118,10 +119,8 @@ class AccidentLocationPage(QWidget):
         
         # 레이아웃에 위젯 추가
         layout.addLayout(selection_layout)
-        layout.addWidget(self.start_hour_label)
-        layout.addWidget(self.start_hour_input)
-        layout.addWidget(self.end_hour_label)
-        layout.addWidget(self.end_hour_input)
+        # layout.addWidget(self.start_hour_label)
+        # layout.addWidget(self.start_hour_input)
         layout.addWidget(self.predict_button)
         layout.addWidget(self.result_table)
         
@@ -134,8 +133,7 @@ class AccidentLocationPage(QWidget):
         region = self.region_combo.currentText()
         day = self.day_combo.currentText()
         try:
-            start_hour = int(self.start_hour_input.text())
-            end_hour = int(self.end_hour_input.text())
+            start_hour = int(datetime.now().hour)
         except ValueError:
             self.result_table.setRowCount(0)
             self.result_table.setColumnCount(0)

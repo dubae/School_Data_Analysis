@@ -1,9 +1,16 @@
 import pandas as pd
-from PyQt5.QtWidgets import QWidget, QLabel, QComboBox, QLineEdit, QPushButton, QVBoxLayout, QHBoxLayout, QTextEdit, QTableWidget, QTableWidgetItem, QHeaderView
+from PyQt5.QtWidgets import (
+    QWidget, QLabel, QComboBox, QLineEdit, QPushButton, QVBoxLayout, QHBoxLayout,
+    QTableWidget, QTableWidgetItem, QHeaderView
+)
 from PyQt5.QtGui import QBrush, QColor
-from datetime import datetime
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
 from sklearn.linear_model import LinearRegression
 import numpy as np
+from datetime import datetime
+import matplotlib.pyplot as plt
+from matplotlib import font_manager, rcParams
 
 def load_and_preprocess_data(file_path):
     all_data = {}
@@ -82,6 +89,22 @@ def predict_accidents_by_place(data, region, day, start_hour, end_hour):
 
     return predicted_counts_2024, total_predicted_count, predicted_percentage_2024
 
+class PlotCanvas(FigureCanvas):
+    def __init__(self, parent=None, width=5, height=4, dpi=100):
+        fig = Figure(figsize=(width, height), dpi=dpi)
+        self.axes = fig.add_subplot(111)
+        super(PlotCanvas, self).__init__(fig)
+        self.setParent(parent)
+
+    def plot(self, times, type_distribution):
+        self.axes.clear()
+        for type, data in type_distribution.items():
+            self.axes.plot(times, data, label=type)
+        self.axes.set_xlabel('시간')
+        self.axes.set_ylabel('비율 (%)')
+        self.axes.legend()
+        self.draw()
+
 class AccidentLocationPage(QWidget):
     def __init__(self, data):
         super().__init__()
@@ -98,7 +121,7 @@ class AccidentLocationPage(QWidget):
         
         self.region_label = QLabel("지역:")
         self.region_combo = QComboBox()
-        self.region_combo.addItems(["서울", "경기", "강원", "세종", "부산", "제주","경북","경남","대구","광주","대전","충남","충북","전북","울산"])
+        self.region_combo.addItems(["서울", "경기", "강원", "세종", "부산", "제주"])
         
         self.day_label = QLabel("요일:")
         self.day_combo = QComboBox()
@@ -108,27 +131,49 @@ class AccidentLocationPage(QWidget):
         selection_layout.addWidget(self.region_combo)
         selection_layout.addWidget(self.day_label)
         selection_layout.addWidget(self.day_combo)
-        
+
         # 시간 입력
         # self.start_hour_label = QLabel("시작 시간 (0-23):")
         # self.start_hour_input = QLineEdit()
+        # self.end_hour_label = QLabel("종료 시간 (1-24):")
+        # self.end_hour_input = QLineEdit()
 
         # 버튼 및 결과
+        self.view_combo = QComboBox()
+        self.view_combo.addItems(["표", "꺾은선 그래프"])
+        
         self.predict_button = QPushButton("사고 수 확인")
         self.result_table = QTableWidget()
-        
+        self.result_graph = PlotCanvas(self)
         # 레이아웃에 위젯 추가
         layout.addLayout(selection_layout)
         # layout.addWidget(self.start_hour_label)
         # layout.addWidget(self.start_hour_input)
+        # layout.addWidget(self.end_hour_label)
+        # layout.addWidget(self.end_hour_input)
+        layout.addWidget(self.view_combo)
         layout.addWidget(self.predict_button)
         layout.addWidget(self.result_table)
+        layout.addWidget(self.result_graph)
         
         self.setLayout(layout)
-        self.show_accident_counts()
+
         # 버튼 클릭 연결
         self.predict_button.clicked.connect(self.show_accident_counts)
-    
+        self.view_combo.currentIndexChanged.connect(self.toggle_view)
+
+        # 기본적으로 표를 보여줍니다
+        self.show_accident_counts()
+
+    def toggle_view(self):
+        view_mode = self.view_combo.currentText()
+        if view_mode == "표":
+            self.result_table.setVisible(True)
+            self.result_graph.setVisible(False)
+        elif view_mode == "꺾은선 그래프":
+            self.result_table.setVisible(False)
+            self.result_graph.setVisible(True)
+
     def show_accident_counts(self):
         region = self.region_combo.currentText()
         day = self.day_combo.currentText()
@@ -149,17 +194,27 @@ class AccidentLocationPage(QWidget):
         self.result_table.setHorizontalHeaderLabels([f"{hour}~{hour+1}" for hour in hours])
         self.result_table.setVerticalHeaderLabels(places)
 
-        # 예측된 사고 수를 계산하여 테이블에 입력합니다.
-        for i, hour in enumerate(hours):
+       # 그래프 데이터 준비
+        plot_times = hours
+        plot_data = {place: [] for place in places}
+
+        # 예측된 사고 수를 계산하여 테이블과 그래프에 입력합니다.
+        for hour in hours:
             predicted_counts_2024, total_predicted_count, predicted_percentage_2024 = predict_accidents_by_place(self.data, region, day, hour, hour+1)
-            for j, place in enumerate(places):
+            for i, place in enumerate(places):
                 percentage = predicted_percentage_2024[place]
                 item = QTableWidgetItem(f"{percentage:.2f}%")
                 if percentage > 30:
                     item.setBackground(QBrush(QColor(255, 0, 0,100)))  # Red background for >30%
-                self.result_table.setItem(j, i, item)
-
+                self.result_table.setItem(i, hour - start_hour, item)
+                plot_data[place].append(percentage)
+        
         # 테이블 보기 설정
         self.result_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.result_table.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
+        # 꺾은선 그래프 업데이트
+        self.result_graph.plot(plot_times, plot_data)
+        
+        self.toggle_view()
 

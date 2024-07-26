@@ -127,7 +127,7 @@ class AccidentActivityPage(QWidget):
         
         self.region_label = QLabel("지역:")
         self.region_combo = QComboBox()
-        self.region_combo.addItems(["서울", "경기", "강원", "세종", "부산", "제주"])
+        self.region_combo.addItems(["서울", "경기", "강원", "세종", "부산", "제주", "경북", "경남", "충북", "충남", "대구", "대전", "광주", "울산", "인천", "전북", "전남"])
         
         self.day_label = QLabel("요일:")
         self.day_combo = QComboBox()
@@ -185,13 +185,14 @@ class AccidentActivityPage(QWidget):
         day = self.day_combo.currentText()
         try:
             start_hour = int(datetime.now().hour)
+            start_hour =6
         except ValueError:
             self.result_table.setRowCount(0)
             self.result_table.setColumnCount(0)
             return
         
         # 시간 범위를 생성합니다.
-        hours = list(range(start_hour, 24))
+        hours = list(range(start_hour, 22))
         activities = ['공부', '구기운동', '기타', '기타운동', '보행/주행', '식사/수면/휴식', '실험실습', '장난/놀이']
 
         # 테이블 초기화
@@ -212,6 +213,8 @@ class AccidentActivityPage(QWidget):
                 item = QTableWidgetItem(f"{percentage:.2f}%")
                 if percentage > 30:
                     item.setBackground(QBrush(QColor(255, 0, 0,100)))  # Red background for >30%
+                elif percentage < 10:
+                    item.setBackground(QBrush(QColor(0, 255, 0,90)))
                 self.result_table.setItem(i, hour - start_hour, item)
                 plot_data[activity].append(percentage)
         

@@ -121,7 +121,7 @@ class AccidentLocationPage(QWidget):
         
         self.region_label = QLabel("지역:")
         self.region_combo = QComboBox()
-        self.region_combo.addItems(["서울", "경기", "강원", "세종", "부산", "제주"])
+        self.region_combo.addItems(["서울", "경기", "강원", "세종", "부산", "제주", "경북", "경남", "충북", "충남", "대구", "대전", "광주", "울산", "인천", "전북", "전남"])
         
         self.day_label = QLabel("요일:")
         self.day_combo = QComboBox()
@@ -132,11 +132,7 @@ class AccidentLocationPage(QWidget):
         selection_layout.addWidget(self.day_label)
         selection_layout.addWidget(self.day_combo)
 
-        # 시간 입력
-        # self.start_hour_label = QLabel("시작 시간 (0-23):")
-        # self.start_hour_input = QLineEdit()
-        # self.end_hour_label = QLabel("종료 시간 (1-24):")
-        # self.end_hour_input = QLineEdit()
+        
 
         # 버튼 및 결과
         self.view_combo = QComboBox()
@@ -145,12 +141,7 @@ class AccidentLocationPage(QWidget):
         self.predict_button = QPushButton("사고 수 확인")
         self.result_table = QTableWidget()
         self.result_graph = PlotCanvas(self)
-        # 레이아웃에 위젯 추가
         layout.addLayout(selection_layout)
-        # layout.addWidget(self.start_hour_label)
-        # layout.addWidget(self.start_hour_input)
-        # layout.addWidget(self.end_hour_label)
-        # layout.addWidget(self.end_hour_input)
         layout.addWidget(self.view_combo)
         layout.addWidget(self.predict_button)
         layout.addWidget(self.result_table)
@@ -179,13 +170,14 @@ class AccidentLocationPage(QWidget):
         day = self.day_combo.currentText()
         try:
             start_hour = int(datetime.now().hour)
+            start_hour = 6
         except ValueError:
             self.result_table.setRowCount(0)
             self.result_table.setColumnCount(0)
             return
         
         # 시간 범위를 생성합니다.
-        hours = list(range(start_hour, 24))
+        hours = list(range(start_hour, 22))
         places = ['교실', '교외', '부속시설', '운동장', '통로']
 
         # 테이블 초기화
@@ -206,6 +198,8 @@ class AccidentLocationPage(QWidget):
                 item = QTableWidgetItem(f"{percentage:.2f}%")
                 if percentage > 30:
                     item.setBackground(QBrush(QColor(255, 0, 0,100)))  # Red background for >30%
+                elif percentage < 10:
+                    item.setBackground(QBrush(QColor(0, 255, 0,90)))
                 self.result_table.setItem(i, hour - start_hour, item)
                 plot_data[place].append(percentage)
         

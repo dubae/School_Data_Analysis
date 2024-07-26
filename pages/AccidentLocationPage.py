@@ -98,7 +98,7 @@ class AccidentLocationPage(QWidget):
         
         self.region_label = QLabel("지역:")
         self.region_combo = QComboBox()
-        self.region_combo.addItems(["서울", "경기", "강원", "세종", "부산", "제주"])
+        self.region_combo.addItems(["서울", "경기", "강원", "세종", "부산", "제주","경북","경남","대구","광주","대전","충남","충북","전북","울산"])
         
         self.day_label = QLabel("요일:")
         self.day_combo = QComboBox()

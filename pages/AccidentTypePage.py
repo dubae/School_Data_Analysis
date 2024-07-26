@@ -1,5 +1,6 @@
 import pandas as pd
-from PyQt5.QtWidgets import QWidget, QLabel, QLineEdit, QPushButton, QVBoxLayout, QTextEdit
+from PyQt5.QtWidgets import QWidget, QLabel, QComboBox, QLineEdit, QPushButton, QVBoxLayout, QHBoxLayout, QTextEdit, QTableWidget, QTableWidgetItem, QHeaderView
+from PyQt5.QtGui import QBrush, QColor
 from sklearn.linear_model import LinearRegression
 import numpy as np
 
@@ -83,70 +84,86 @@ class AccidentTypePage(QWidget):
         
         self.data = data
         
-        self.setWindowTitle("사고형태 페이지")
+        self.setWindowTitle("사고부위 페이지")
         
-        self.layout = QVBoxLayout()
+        self.init_ui()
+
+    def init_ui(self):
+        layout = QVBoxLayout()
+        
+        # 지역 및 요일 선택
+        selection_layout = QHBoxLayout()
         
         self.region_label = QLabel("지역:")
-        self.region_input = QLineEdit()
-        self.day_label = QLabel("요일 (월, 화, 수, 목, 금, 토, 일):")
-        self.day_input = QLineEdit()
+        self.region_combo = QComboBox()
+        self.region_combo.addItems(["서울", "경기", "강원", "세종", "부산", "제주"])
+        
+        self.day_label = QLabel("요일:")
+        self.day_combo = QComboBox()
+        self.day_combo.addItems(["월", "화", "수", "목", "금", "토", "일"])
+        
+        selection_layout.addWidget(self.region_label)
+        selection_layout.addWidget(self.region_combo)
+        selection_layout.addWidget(self.day_label)
+        selection_layout.addWidget(self.day_combo)
+        
+        # 시간 입력
         self.start_hour_label = QLabel("시작 시간 (0-23):")
         self.start_hour_input = QLineEdit()
         self.end_hour_label = QLabel("종료 시간 (1-24):")
         self.end_hour_input = QLineEdit()
+
+        # 버튼 및 결과
         self.predict_button = QPushButton("사고 수 확인")
-        self.result_label = QTextEdit()
+        self.result_table = QTableWidget()
         
-        self.layout.addWidget(self.region_label)
-        self.layout.addWidget(self.region_input)
-        self.layout.addWidget(self.day_label)
-        self.layout.addWidget(self.day_input)
-        self.layout.addWidget(self.start_hour_label)
-        self.layout.addWidget(self.start_hour_input)
-        self.layout.addWidget(self.end_hour_label)
-        self.layout.addWidget(self.end_hour_input)
-        self.layout.addWidget(self.predict_button)
-        self.layout.addWidget(self.result_label)
+        # 레이아웃에 위젯 추가
+        layout.addLayout(selection_layout)
+        layout.addWidget(self.start_hour_label)
+        layout.addWidget(self.start_hour_input)
+        layout.addWidget(self.end_hour_label)
+        layout.addWidget(self.end_hour_input)
+        layout.addWidget(self.predict_button)
+        layout.addWidget(self.result_table)
         
+        self.setLayout(layout)
+
+        # 버튼 클릭 연결
         self.predict_button.clicked.connect(self.show_accident_counts)
-        
-        self.setLayout(self.layout)
-    
+
     def show_accident_counts(self):
-        region = self.region_input.text()
-        day = self.day_input.text()
-        start_hour = int(self.start_hour_input.text())
-        end_hour = int(self.end_hour_input.text())
+        region = self.region_combo.currentText()
+        day = self.day_combo.currentText()
+        try:
+            start_hour = int(self.start_hour_input.text())
+            end_hour = int(self.end_hour_input.text())
+        except ValueError:
+            self.result_table.setRowCount(0)
+            self.result_table.setColumnCount(0)
+            return
         
-        counts, type_distribution, type_counts_total = get_accident_counts_and_type_distribution(self.data, region, day, start_hour, end_hour)
-        predicted_counts_2024, total_predicted_count, predicted_percentage_2024 = predict_accidents_by_type(self.data, region, day, start_hour, end_hour)
-        
-        result_text = f"{region} 지역에서 {day}요일 {start_hour}시부터 {end_hour}시까지의 사고 수:\n"
-        for year, count in counts.items():
-            result_text += f"{year}: {count}건\n"
-        
-        result_text += "\n사고 형태별 비율 및 횟수:\n"
-        for year, distribution in type_distribution.items():
-            result_text += f"{year}년:\n"
-            for type, percentage in distribution.items():
-                count = type_counts_total[year].get(type, 0)
-                result_text += f"  {type}: {count}건 ({percentage:.2f}%)\n"
-        
-        result_text += f"\n2024년 {day}요일에 예측된 사고 수:\n"
-        for type, count in predicted_counts_2024.items():
-            percentage = predicted_percentage_2024[type]
-            result_text += f"  {type}: {count:.2f}건 ({percentage:.2f}%)\n"
-        result_text += f"\n총 예측 사고 수: {total_predicted_count:.2f}건\n"
-        
-        # 두회의 테스트
-        result_text += f"\n--------------TEST--------------\n"
-        for i in range(start_hour,24,1):
-            predicted_counts_2024, total_predicted_count, predicted_percentage_2024 = predict_accidents_by_type(self.data, region, day, i, i+1)
-            result_text += f"\n2024년 {day}요일 {i}~{i+1}에 예측된 사고 수:\n"
-            for type, count in predicted_counts_2024.items():
+        # 시간 범위를 생성합니다.
+        hours = list(range(start_hour, 24))
+        types = ['기타', '낙상', '낙상-넘어짐', '낙상-떨어짐', '낙상-미끄러짐', '물리적힘 노출', '사람과의 충돌', '염좌·삐임 등 신체 충격']
+
+        # 테이블 초기화
+        self.result_table.setRowCount(len(types))
+        self.result_table.setColumnCount(len(hours))
+        self.result_table.setHorizontalHeaderLabels([f"{hour}~{hour+1}" for hour in hours])
+        self.result_table.setVerticalHeaderLabels(types)
+
+        # 예측된 사고 수를 계산하여 테이블에 입력합니다.
+        for i, hour in enumerate(hours):
+            predicted_counts_2024, total_predicted_count, predicted_percentage_2024 = predict_accidents_by_type(self.data, region, day, hour, hour+1)
+            for j, type in enumerate(types):
                 percentage = predicted_percentage_2024[type]
-                result_text += f"  {type}: {count:.2f}건 ({percentage:.2f}%)\n"
-            result_text += f"\n총 예측 사고 수: {total_predicted_count:.2f}건\n"
-        
-        self.result_label.setText(result_text)
+                item = QTableWidgetItem(f"{percentage:.2f}%")
+                if percentage > 30:
+                    item.setBackground(QBrush(QColor(255, 0, 0,100)))  # Red background for >30%
+                self.result_table.setItem(j, i, item)
+
+        # 테이블 보기 설정
+        self.result_table.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
+        self.result_table.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
+
+

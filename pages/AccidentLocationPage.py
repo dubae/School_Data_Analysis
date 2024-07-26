@@ -158,7 +158,7 @@ class AccidentLocationPage(QWidget):
                 percentage = predicted_percentage_2024[place]
                 item = QTableWidgetItem(f"{percentage:.2f}%")
                 if percentage > 30:
-                    item.setBackground(QBrush(QColor(255, 0, 0,128)))  # Red background for >30%
+                    item.setBackground(QBrush(QColor(255, 0, 0,100)))  # Red background for >30%
                 self.result_table.setItem(j, i, item)
 
         # 테이블 보기 설정

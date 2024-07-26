@@ -131,6 +131,7 @@ class AccidentActivityPage(QWidget):
         self.setLayout(layout)
 
         # 버튼 클릭 연결
+        self.show_accident_counts()
         self.predict_button.clicked.connect(self.show_accident_counts)
 
     def show_accident_counts(self):

@@ -125,7 +125,7 @@ class AccidentLocationPage(QWidget):
         layout.addWidget(self.result_table)
         
         self.setLayout(layout)
-
+        self.show_accident_counts()
         # 버튼 클릭 연결
         self.predict_button.clicked.connect(self.show_accident_counts)
     
